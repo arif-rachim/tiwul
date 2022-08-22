@@ -129,7 +129,15 @@ function App() {
     }
 
     const blockRefInitialDrag = useRef<{ x: number, y: number }>({x: 0, y: 0});
+    function onDragStart(event: DragEvent | TouchEvent){
+        if ('touches' in event) {
 
+        } else {
+            const img = new Image();
+            img.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAUEBAAAACwAAAAAAQABAAACAkQBADs=';
+            event.dataTransfer.setDragImage(img, 0, 0);
+        }
+    }
     function onDragStartBlockRef(event: DragEvent | TouchEvent) {
 
         let clientX = 0;
@@ -375,29 +383,29 @@ function App() {
                     backgroundColor: 'rgba(0,0,0,0.5)'
                 }}/>
                 <Vertical draggable={true} ref={blockRef}
-                          style={{position: 'absolute', border: '5px dashed rgba(0,0,0,0.5)'}} onDrag={onDragBlockRef}
+                          style={{position: 'absolute', border: '2px dashed rgba(0,0,0,0.5)'}} onDrag={onDragBlockRef}
                           onDragStart={onDragStartBlockRef} onDragEnd={onDragEndBlockRef} onTouchMove={onDragBlockRef}
                           onTouchStart={onDragStartBlockRef} onTouchEnd={onDragEndBlockRef}/>
                 <Vertical draggable={true} ref={leftHandlerRef} style={{
                     position: 'absolute',
                     width: borderWidth,
                     cursor: "move"
-                }} onDrag={onDrag} onDragEnd={onDragEnd} onTouchMove={onDrag} onTouchEnd={onDragEnd}/>
+                }} onDragStart={onDragStart} onDrag={onDrag} onDragEnd={onDragEnd} onTouchMove={onDrag} onTouchEnd={onDragEnd}/>
                 <Vertical draggable={true} ref={rightHandlerRef} style={{
                     position: 'absolute',
                     width: borderWidth,
                     cursor: "move"
-                }} onDrag={onDrag} onDragEnd={onDragEnd} onTouchMove={onDrag} onTouchEnd={onDragEnd}/>
+                }} onDragStart={onDragStart} onDrag={onDrag} onDragEnd={onDragEnd} onTouchMove={onDrag} onTouchEnd={onDragEnd}/>
                 <Vertical draggable={true} ref={topHandlerRef} style={{
                     position: 'absolute',
                     height: borderWidth,
                     cursor: "move"
-                }} onDrag={onDrag} onDragEnd={onDragEnd} onTouchMove={onDrag} onTouchEnd={onDragEnd}/>
+                }} onDragStart={onDragStart} onDrag={onDrag} onDragEnd={onDragEnd} onTouchMove={onDrag} onTouchEnd={onDragEnd}/>
                 <Vertical draggable={true} ref={bottomHandlerRef} style={{
                     position: 'absolute',
                     height: borderWidth,
                     cursor: "move"
-                }} onDrag={onDrag} onDragEnd={onDragEnd} onTouchMove={onDrag} onTouchEnd={onDragEnd}/>
+                }} onDragStart={onDragStart} onDrag={onDrag} onDragEnd={onDragEnd} onTouchMove={onDrag} onTouchEnd={onDragEnd}/>
             </Vertical>
         </Vertical>
         <Vertical style={{
