@@ -20,8 +20,9 @@ const borderWidth = '3rem';
 
 function validateBlockMovement(newBlock: { left: number; top: number; right: number; bottom: number }, originalBlock: { left: number; top: number; right: number; bottom: number }) {
 
-    const xMovementNotValid = newBlock.left < 0 || newBlock.right < 0;
-    const YMovementNotValid = newBlock.top < 0 || newBlock.bottom < 0;
+    const xMovementNotValid = false;
+    const YMovementNotValid = false;
+
     if (xMovementNotValid) {
         newBlock.left = originalBlock.left;
         newBlock.right = originalBlock.right;
@@ -105,7 +106,7 @@ function App() {
         const marginY = (height - squareSize) / 2;
 
         setLayerContainerDimension({width, height, left, top});
-        const newBlock = {left:marginX,right:marginX,top:marginY,bottom:marginY}
+        const newBlock = {left: marginX, right: marginX, top: marginY, bottom: marginY}
         setBlockDimension((originalBlock) => validateBlockMovement(newBlock, originalBlock));
     }, []);
 
@@ -117,6 +118,7 @@ function App() {
         function toNumber(text: string) {
             return parseInt(text.replace('px', ''))
         }
+
         setBlockDimension(originalBlock => validateBlockMovement({
             left: toNumber(left),
             right: toNumber(right),
@@ -163,38 +165,36 @@ function App() {
         invariant(leftOverlayRef.current, 'missing leftOverlayRef');
         invariant(rightOverlayRef.current, 'missing rightOverlayRef');
         invariant(blockRef.current, 'missing blockRef');
-
-        leftOverlayRef.current.style.width = toPx(blockDimension.left);
-        rightOverlayRef.current.style.width = toPx(blockDimension.right);
-
-        topOverlayRef.current.style.height = toPx(blockDimension.top);
-        topOverlayRef.current.style.left = toPx(blockDimension.left);
-        topOverlayRef.current.style.right = toPx(blockDimension.right);
-
-        bottomOverlayRef.current.style.height = toPx(blockDimension.bottom);
-        bottomOverlayRef.current.style.left = toPx(blockDimension.left);
-        bottomOverlayRef.current.style.right = toPx(blockDimension.right);
-
-        blockRef.current.style.top = toPx(blockDimension.top);
-        blockRef.current.style.left = toPx(blockDimension.left);
-        blockRef.current.style.right = toPx(blockDimension.right);
-        blockRef.current.style.bottom = toPx(blockDimension.bottom);
-
-        leftHandlerRef.current.style.left = toPx(blockDimension.left);
-        leftHandlerRef.current.style.top = toPx(blockDimension.top);
-        leftHandlerRef.current.style.bottom = toPx(blockDimension.bottom);
-
-        rightHandlerRef.current.style.right = toPx(blockDimension.right);
-        rightHandlerRef.current.style.top = toPx(blockDimension.top);
-        rightHandlerRef.current.style.bottom = toPx(blockDimension.bottom);
-
-        topHandlerRef.current.style.right = toPx(blockDimension.right);
-        topHandlerRef.current.style.left = toPx(blockDimension.left);
-        topHandlerRef.current.style.top = toPx(blockDimension.top);
-
-        bottomHandlerRef.current.style.right = toPx(blockDimension.right);
-        bottomHandlerRef.current.style.left = toPx(blockDimension.left);
-        bottomHandlerRef.current.style.bottom = toPx(blockDimension.bottom);
+        const validX = blockDimension.left >= 0 && blockDimension.right >= 0;
+        const validY = blockDimension.top >= 0 && blockDimension.bottom >= 0;
+        if (validX) {
+            leftOverlayRef.current.style.width = toPx(blockDimension.left);
+            rightOverlayRef.current.style.width = toPx(blockDimension.right);
+            topOverlayRef.current.style.left = toPx(blockDimension.left);
+            topOverlayRef.current.style.right = toPx(blockDimension.right);
+            bottomOverlayRef.current.style.left = toPx(blockDimension.left);
+            bottomOverlayRef.current.style.right = toPx(blockDimension.right);
+            blockRef.current.style.left = toPx(blockDimension.left);
+            blockRef.current.style.right = toPx(blockDimension.right);
+            leftHandlerRef.current.style.left = toPx(blockDimension.left - 20);
+            rightHandlerRef.current.style.right = toPx(blockDimension.right - 20);
+            topHandlerRef.current.style.right = toPx(blockDimension.right);
+            topHandlerRef.current.style.left = toPx(blockDimension.left);
+            bottomHandlerRef.current.style.right = toPx(blockDimension.right);
+            bottomHandlerRef.current.style.left = toPx(blockDimension.left);
+        }
+        if (validY) {
+            topOverlayRef.current.style.height = toPx(blockDimension.top);
+            bottomOverlayRef.current.style.height = toPx(blockDimension.bottom);
+            blockRef.current.style.top = toPx(blockDimension.top);
+            blockRef.current.style.bottom = toPx(blockDimension.bottom);
+            leftHandlerRef.current.style.top = toPx(blockDimension.top);
+            leftHandlerRef.current.style.bottom = toPx(blockDimension.bottom);
+            rightHandlerRef.current.style.top = toPx(blockDimension.top);
+            rightHandlerRef.current.style.bottom = toPx(blockDimension.bottom);
+            topHandlerRef.current.style.top = toPx(blockDimension.top - 20);
+            bottomHandlerRef.current.style.bottom = toPx(blockDimension.bottom- 20);
+        }
     }
 
     useEffect(() => renderPosition(blockDimension), [blockDimension])
@@ -356,27 +356,23 @@ function App() {
                     position: 'absolute',
                     left: 0,
                     height: '100%',
-                    backgroundColor: 'rgba(0,0,0,0.5)',
-                    backdropFilter: 'blur(5px)'
+                    backgroundColor: 'rgba(0,0,0,0.5)'
                 }}/>
                 <Vertical ref={rightOverlayRef} style={{
                     position: 'absolute',
                     right: 0,
                     height: '100%',
-                    backgroundColor: 'rgba(0,0,0,0.5)',
-                    backdropFilter: 'blur(5px)'
+                    backgroundColor: 'rgba(0,0,0,0.5)'
                 }}/>
                 <Vertical ref={topOverlayRef} style={{
                     position: 'absolute',
                     top: 0,
-                    backgroundColor: 'rgba(0,0,0,0.5)',
-                    backdropFilter: 'blur(5px)'
+                    backgroundColor: 'rgba(0,0,0,0.5)'
                 }}/>
                 <Vertical ref={bottomOverlayRef} style={{
                     position: 'absolute',
                     bottom: 0,
-                    backgroundColor: 'rgba(0,0,0,0.5)',
-                    backdropFilter: 'blur(5px)'
+                    backgroundColor: 'rgba(0,0,0,0.5)'
                 }}/>
                 <Vertical draggable={true} ref={blockRef}
                           style={{position: 'absolute', border: '5px dashed rgba(0,0,0,0.5)'}} onDrag={onDragBlockRef}
@@ -385,25 +381,21 @@ function App() {
                 <Vertical draggable={true} ref={leftHandlerRef} style={{
                     position: 'absolute',
                     width: borderWidth,
-                    backgroundColor: 'rgba(0,0,0,0.05)',
                     cursor: "move"
                 }} onDrag={onDrag} onDragEnd={onDragEnd} onTouchMove={onDrag} onTouchEnd={onDragEnd}/>
                 <Vertical draggable={true} ref={rightHandlerRef} style={{
                     position: 'absolute',
                     width: borderWidth,
-                    backgroundColor: 'rgba(0,0,0,0.05)',
                     cursor: "move"
                 }} onDrag={onDrag} onDragEnd={onDragEnd} onTouchMove={onDrag} onTouchEnd={onDragEnd}/>
                 <Vertical draggable={true} ref={topHandlerRef} style={{
                     position: 'absolute',
                     height: borderWidth,
-                    backgroundColor: 'rgba(0,0,0,0.05)',
                     cursor: "move"
                 }} onDrag={onDrag} onDragEnd={onDragEnd} onTouchMove={onDrag} onTouchEnd={onDragEnd}/>
                 <Vertical draggable={true} ref={bottomHandlerRef} style={{
                     position: 'absolute',
                     height: borderWidth,
-                    backgroundColor: 'rgba(0,0,0,0.05)',
                     cursor: "move"
                 }} onDrag={onDrag} onDragEnd={onDragEnd} onTouchMove={onDrag} onTouchEnd={onDragEnd}/>
             </Vertical>
