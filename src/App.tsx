@@ -3,7 +3,7 @@ import './App.css';
 import {Vertical} from "react-hook-components";
 import invariant from "tiny-invariant";
 import {v4} from "uuid";
-import {BiLayerPlus} from "react-icons/bi";
+import {MdInsertPhoto} from "react-icons/md";
 
 interface Layer {
     id: string;
@@ -33,8 +33,13 @@ function validateBlockMovement(newBlock: { left: number; top: number; right: num
     }
     return {...newBlock};
 }
-
+enum ViewState{
+    Initial,
+    ImageSelected,
+    ImageSaved
+}
 function App() {
+    const [viewState,setViewState] = useState<ViewState>(ViewState.Initial);
     const [layers, setLayers] = useState<Layer[]>([]);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const layerContainerRef = useRef<HTMLDivElement>(null);
@@ -129,7 +134,8 @@ function App() {
     }
 
     const blockRefInitialDrag = useRef<{ x: number, y: number }>({x: 0, y: 0});
-    function onDragStart(event: DragEvent | TouchEvent){
+
+    function onDragStart(event: DragEvent | TouchEvent) {
         if ('touches' in event) {
 
         } else {
@@ -138,6 +144,7 @@ function App() {
             event.dataTransfer.setDragImage(img, 0, 0);
         }
     }
+
     function onDragStartBlockRef(event: DragEvent | TouchEvent) {
 
         let clientX = 0;
@@ -201,7 +208,7 @@ function App() {
             rightHandlerRef.current.style.top = toPx(blockDimension.top);
             rightHandlerRef.current.style.bottom = toPx(blockDimension.bottom);
             topHandlerRef.current.style.top = toPx(blockDimension.top - 20);
-            bottomHandlerRef.current.style.bottom = toPx(blockDimension.bottom- 20);
+            bottomHandlerRef.current.style.bottom = toPx(blockDimension.bottom - 20);
         }
     }
 
@@ -334,9 +341,10 @@ function App() {
     }
 
     return (<Vertical h={'100%'} style={{position: 'relative'}}>
-        <input type={"file"} onChange={onFileSelected} style={{display: 'none'}} ref={fileInputRef}/>
-
-        <Vertical h={'100%'} style={{margin: '1rem'}} position={'relative'}>
+        <input type={"file"} onChange={onFileSelected} style={{display: 'none'}} ref={fileInputRef}
+               accept=".jpg, .png, .jpeg, .gif"
+        />
+        <Vertical h={'100%'}  position={'relative'}>
             <Vertical h={'100%'} w={'100%'} ref={layerContainerRef} style={{position: 'relative'}}
                       onDragOver={e => e.preventDefault()}>
                 {layers.map(file => {
@@ -390,35 +398,40 @@ function App() {
                     position: 'absolute',
                     width: borderWidth,
                     cursor: "move"
-                }} onDragStart={onDragStart} onDrag={onDrag} onDragEnd={onDragEnd} onTouchMove={onDrag} onTouchEnd={onDragEnd}/>
+                }} onDragStart={onDragStart} onDrag={onDrag} onDragEnd={onDragEnd} onTouchMove={onDrag}
+                          onTouchEnd={onDragEnd}/>
                 <Vertical draggable={true} ref={rightHandlerRef} style={{
                     position: 'absolute',
                     width: borderWidth,
                     cursor: "move"
-                }} onDragStart={onDragStart} onDrag={onDrag} onDragEnd={onDragEnd} onTouchMove={onDrag} onTouchEnd={onDragEnd}/>
+                }} onDragStart={onDragStart} onDrag={onDrag} onDragEnd={onDragEnd} onTouchMove={onDrag}
+                          onTouchEnd={onDragEnd}/>
                 <Vertical draggable={true} ref={topHandlerRef} style={{
                     position: 'absolute',
                     height: borderWidth,
                     cursor: "move"
-                }} onDragStart={onDragStart} onDrag={onDrag} onDragEnd={onDragEnd} onTouchMove={onDrag} onTouchEnd={onDragEnd}/>
+                }} onDragStart={onDragStart} onDrag={onDrag} onDragEnd={onDragEnd} onTouchMove={onDrag}
+                          onTouchEnd={onDragEnd}/>
                 <Vertical draggable={true} ref={bottomHandlerRef} style={{
                     position: 'absolute',
                     height: borderWidth,
                     cursor: "move"
-                }} onDragStart={onDragStart} onDrag={onDrag} onDragEnd={onDragEnd} onTouchMove={onDrag} onTouchEnd={onDragEnd}/>
+                }} onDragStart={onDragStart} onDrag={onDrag} onDragEnd={onDragEnd} onTouchMove={onDrag}
+                          onTouchEnd={onDragEnd}/>
             </Vertical>
         </Vertical>
         <Vertical style={{
-            bottom: '1rem',
-            right: '1rem',
-            position: 'absolute',
-            backgroundColor: 'rgba(0,0,0,0.1)',
-            borderRadius: '5rem',
+            backgroundColor: 'rgba(255,255,255,0.8)',
             padding: '0.5rem',
             cursor: 'pointer',
             boxShadow: '0 5px 3px -2px rgba(0,0,0,0.05)'
         }} onClick={() => fileInputRef?.current?.click()}>
-            <BiLayerPlus style={{fontSize: '3rem'}}/>
+            <Vertical style={{color: "deepskyblue"}} hAlign={'center'}>
+                <MdInsertPhoto style={{fontSize: '3rem'}}/>
+                <Vertical style={{fontSize: '0.8rem'}}>
+                    Choose Image
+                </Vertical>
+            </Vertical>
         </Vertical>
     </Vertical>);
 }
