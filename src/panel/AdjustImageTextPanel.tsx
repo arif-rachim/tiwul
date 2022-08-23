@@ -1,11 +1,11 @@
 import {Vertical} from "react-hook-components";
 import {Layer} from "./Layer";
-import {useEffect, useRef} from "react";
+import {MutableRefObject, useEffect, useRef} from "react";
 import invariant from "tiny-invariant";
 import {waitForEvent} from "./waitForEvent";
 
 
-export function AdjustImageTextPanel(props:{layers: Layer[]}){
+export function AdjustImageTextPanel(props:{layers: Layer[],canvasRef:MutableRefObject<HTMLCanvasElement|null>}){
     const {layers} = props;
     const canvasRef = useRef<HTMLCanvasElement>(null);
     useEffect(() => {
@@ -25,7 +25,6 @@ export function AdjustImageTextPanel(props:{layers: Layer[]}){
                 canvas.height = canvasHeight;
                 canvas.width = canvasWidth;
 
-
                 const image = new Image();
                 image.src = layer.imageData;
                 await waitForEvent('load',image);
@@ -33,13 +32,12 @@ export function AdjustImageTextPanel(props:{layers: Layer[]}){
                 const sy = layer.viewPortY;
                 const sw = layer.viewPortWidth;
                 const sh = layer.viewPortHeight;
-
                 ctx.drawImage(image,sx,sy,sw,sh,0, 0,canvasWidth,canvasHeight);
             }
 
         })();
     },[layers])
     return <Vertical h={'100%'}>
-        <canvas ref={canvasRef}  style={{border:'1px solid black'}}/>
+        <canvas ref={canvasRef}  />
     </Vertical>
 }

@@ -21,7 +21,7 @@ function App() {
     const [layers, setLayers] = useState<Layer[]>([]);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const blockRef = useRef<HTMLDivElement>(null);
-
+    const canvasRef = useRef<HTMLCanvasElement>(null);
     function onCropImageAndContinue() {
         const newLayers = layers.map(layer => {
             const image = document.querySelector(`[data-id="${layer.id}"]`);
@@ -125,7 +125,7 @@ function App() {
             {viewState === ViewState.ImageSelected &&
                 <CropImagePanel layers={layers} blockRef={blockRef}/>}
             {viewState === ViewState.ImageSaved &&
-                <AdjustImageTextPanel layers={layers}/>
+                <AdjustImageTextPanel layers={layers} canvasRef={canvasRef}/>
             }
         </Vertical>
         <Horizontal hAlign={'center'}>
