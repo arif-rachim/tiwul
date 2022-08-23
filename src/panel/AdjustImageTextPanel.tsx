@@ -7,7 +7,8 @@ import {waitForEvent} from "./waitForEvent";
 
 export function AdjustImageTextPanel(props:{layers: Layer[],canvasRef:MutableRefObject<HTMLCanvasElement|null>}){
     const {layers} = props;
-    const canvasRef = useRef<HTMLCanvasElement>(null);
+    const _canvasRef = useRef<HTMLCanvasElement>(null);
+    const canvasRef = props.canvasRef ?? _canvasRef;
     useEffect(() => {
         // lets check canvas width
         invariant(canvasRef.current,'Canvas cannot be empty');

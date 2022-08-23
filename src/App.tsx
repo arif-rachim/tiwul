@@ -15,6 +15,37 @@ export enum ViewState {
     ImageSaved
 }
 
+interface Image {
+    filename: string,//'d84bdd6a0bbd.png',
+    name: string,//'d84bdd6a0bbd',
+    mime: string,//'image/png',
+    extension: string,//'png',
+    url: string//'https://i.ibb.co/khhZwCG/d84bdd6a0bbd.png'
+}
+
+interface Thumb {
+    filename: string,// 'd84bdd6a0bbd.png',
+    name: string,// 'd84bdd6a0bbd',
+    mime: string,// 'image/png',
+    extension: string,// 'png',
+    url: string// 'https://i.ibb.co/mHHp2WR/d84bdd6a0bbd.png'
+}
+
+interface ImageData {
+    delete_url: string,//"https://ibb.co/mHHp2WR/a8533ad87f6417058c3b0b14275385a3"
+    display_url: string,//"https://i.ibb.co/khhZwCG/d84bdd6a0bbd.png"
+    expiration: string,//"600"
+    height: string,//"215"
+    id: string,//"mHHp2WR"
+    image: Image
+    size: number,//86813
+    thumb: Thumb
+    time: string,//"1661279314"
+    title: string,//"d84bdd6a0bbd"
+    url: string,//"https://i.ibb.co/khhZwCG/d84bdd6a0bbd.png"
+    url_viewer: string,//"https://ibb.co/mHHp2WR"
+    width: string,//"375"
+}
 
 function App() {
     const [viewState, setViewState] = useState<ViewState>(ViewState.Initial);
@@ -22,6 +53,7 @@ function App() {
     const fileInputRef = useRef<HTMLInputElement>(null);
     const blockRef = useRef<HTMLDivElement>(null);
     const canvasRef = useRef<HTMLCanvasElement>(null);
+
     function onCropImageAndContinue() {
         const newLayers = layers.map(layer => {
             const image = document.querySelector(`[data-id="${layer.id}"]`);
@@ -46,7 +78,7 @@ function App() {
             debugger;
             const imageToActualRatio = imageHeight / layer.naturalHeight
             const imageToActualRatioTwo = imageWidth / layer.naturalWidth;
-            if(imageToActualRatio !== imageToActualRatioTwo){
+            if (imageToActualRatio !== imageToActualRatioTwo) {
                 debugger;
             }
             const startingXPos = (blockX - imageX) / imageToActualRatio;
@@ -73,8 +105,22 @@ function App() {
         setViewState(ViewState.ImageSaved);
     }
 
-    function onPublish() {
+    async function onPublish() {
+        const data = canvasRef?.current?.toDataURL() ?? '';
+        const base64 = 'base64,'
+        const startIndex = data.indexOf(base64);
+        const formData = new FormData();
+        formData.append('image', data.substring(startIndex + base64.length, data.length));
+        formData.append('key', decodeURIComponent(escape(window.atob('ZTAxNTViNjQzMzExZTUyNTY4YjdjZWQxMGQ5ZGU3NGE='))));
+        formData.append('expiration', '600');
+        const response = await fetch(`https://api.imgbb.com/1/upload`, {
+            method: 'POST',
+            body: formData
+        });
+        const json:any = await response.json();
+        const imageData:ImageData = json;
 
+        debugger;
     }
 
     async function onFileSelected(event: ChangeEvent<HTMLInputElement>) {
