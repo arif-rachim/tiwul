@@ -1,9 +1,10 @@
 import React, {ChangeEvent, DragEvent, TouchEvent, useEffect, useRef, useState} from 'react';
 import './App.css';
-import {Vertical} from "react-hook-components";
+import {Horizontal, Vertical} from "react-hook-components";
 import invariant from "tiny-invariant";
 import {v4} from "uuid";
-import {MdInsertPhoto} from "react-icons/md";
+import {MdInsertPhoto, MdOutlineCrop, MdOutlineUndo} from "react-icons/md";
+import {IconType} from "react-icons";
 
 interface Layer {
     id: string;
@@ -16,7 +17,6 @@ function toPx(value: number) {
     return `${value}px`;
 }
 
-const borderWidth = '3rem';
 
 function validateBlockMovement(newBlock: { left: number; top: number; right: number; bottom: number }, originalBlock: { left: number; top: number; right: number; bottom: number }) {
 
@@ -33,13 +33,32 @@ function validateBlockMovement(newBlock: { left: number; top: number; right: num
     }
     return {...newBlock};
 }
-enum ViewState{
+
+enum ViewState {
     Initial,
     ImageSelected,
     ImageSaved
 }
+
+function TabBarButton(props: { onClick: () => void,title:string,icon:IconType }) {
+    const Icon = props.icon;
+    return <Vertical style={{
+        backgroundColor: "rgba(255,255,255,0.8)",
+        padding: "0.5rem",
+        cursor: "pointer",
+        boxShadow: "0 5px 3px -2px rgba(0,0,0,0.05)"
+    }} onClick={props.onClick}>
+        <Vertical style={{color: "deepskyblue"}} hAlign={"center"}>
+            <Icon style={{fontSize: "3rem"}}/>
+            <Vertical style={{fontSize: "0.8rem"}}>
+                {props.title}
+            </Vertical>
+        </Vertical>
+    </Vertical>;
+}
+
 function App() {
-    const [viewState,setViewState] = useState<ViewState>(ViewState.Initial);
+    const [viewState, setViewState] = useState<ViewState>(ViewState.Initial);
     const [layers, setLayers] = useState<Layer[]>([]);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const layerContainerRef = useRef<HTMLDivElement>(null);
@@ -97,6 +116,7 @@ function App() {
             fileReader.readAsDataURL(file);
         })));
         setLayers(old => [...old, ...fileSources]);
+        setViewState(ViewState.ImageSelected);
     }
 
     useEffect(() => {
@@ -341,10 +361,12 @@ function App() {
     }
 
     return (<Vertical h={'100%'} style={{position: 'relative'}}>
-        <input type={"file"} onChange={onFileSelected} style={{display: 'none'}} ref={fileInputRef}
+        <input type={"file"} onChange={onFileSelected}
+               style={{display: 'none'}}
+               ref={fileInputRef}
                accept=".jpg, .png, .jpeg, .gif"
         />
-        <Vertical h={'100%'}  position={'relative'}>
+        <Vertical h={'100%'} position={'relative'}>
             <Vertical h={'100%'} w={'100%'} ref={layerContainerRef} style={{position: 'relative'}}
                       onDragOver={e => e.preventDefault()}>
                 {layers.map(file => {
@@ -368,71 +390,29 @@ function App() {
                         width: imageWidth,
                     }}/>
                 })}
-                <Vertical ref={leftOverlayRef} style={{
-                    position: 'absolute',
-                    left: 0,
-                    height: '100%',
-                    backgroundColor: 'rgba(0,0,0,0.5)'
-                }}/>
-                <Vertical ref={rightOverlayRef} style={{
-                    position: 'absolute',
-                    right: 0,
-                    height: '100%',
-                    backgroundColor: 'rgba(0,0,0,0.5)'
-                }}/>
-                <Vertical ref={topOverlayRef} style={{
-                    position: 'absolute',
-                    top: 0,
-                    backgroundColor: 'rgba(0,0,0,0.5)'
-                }}/>
-                <Vertical ref={bottomOverlayRef} style={{
-                    position: 'absolute',
-                    bottom: 0,
-                    backgroundColor: 'rgba(0,0,0,0.5)'
-                }}/>
-                <Vertical draggable={true} ref={blockRef}
-                          style={{position: 'absolute', border: '2px dashed rgba(0,0,0,0.5)'}} onDrag={onDragBlockRef}
+                <Vertical ref={leftOverlayRef} className={'overlay'} style={{left: 0,height: '100%'}}/>
+                <Vertical ref={rightOverlayRef} className={'overlay'} style={{right: 0,height: '100%',}}/>
+                <Vertical ref={topOverlayRef} className={'overlay'} style={{top: 0}}/>
+                <Vertical ref={bottomOverlayRef} className={'overlay'} style={{bottom: 0}}/>
+                <Vertical  ref={blockRef} draggable={true}
+                          className={'block'} onDrag={onDragBlockRef}
                           onDragStart={onDragStartBlockRef} onDragEnd={onDragEndBlockRef} onTouchMove={onDragBlockRef}
                           onTouchStart={onDragStartBlockRef} onTouchEnd={onDragEndBlockRef}/>
-                <Vertical draggable={true} ref={leftHandlerRef} style={{
-                    position: 'absolute',
-                    width: borderWidth,
-                    cursor: "move"
-                }} onDragStart={onDragStart} onDrag={onDrag} onDragEnd={onDragEnd} onTouchMove={onDrag}
+                <Vertical draggable={true} ref={leftHandlerRef} className={'handler x'}  onDragStart={onDragStart} onDrag={onDrag} onDragEnd={onDragEnd} onTouchMove={onDrag}
                           onTouchEnd={onDragEnd}/>
-                <Vertical draggable={true} ref={rightHandlerRef} style={{
-                    position: 'absolute',
-                    width: borderWidth,
-                    cursor: "move"
-                }} onDragStart={onDragStart} onDrag={onDrag} onDragEnd={onDragEnd} onTouchMove={onDrag}
+                <Vertical draggable={true} ref={rightHandlerRef} className={'handler x'} onDragStart={onDragStart} onDrag={onDrag} onDragEnd={onDragEnd} onTouchMove={onDrag}
                           onTouchEnd={onDragEnd}/>
-                <Vertical draggable={true} ref={topHandlerRef} style={{
-                    position: 'absolute',
-                    height: borderWidth,
-                    cursor: "move"
-                }} onDragStart={onDragStart} onDrag={onDrag} onDragEnd={onDragEnd} onTouchMove={onDrag}
+                <Vertical draggable={true} ref={topHandlerRef} className={'handler y'} onDragStart={onDragStart} onDrag={onDrag} onDragEnd={onDragEnd} onTouchMove={onDrag}
                           onTouchEnd={onDragEnd}/>
-                <Vertical draggable={true} ref={bottomHandlerRef} style={{
-                    position: 'absolute',
-                    height: borderWidth,
-                    cursor: "move"
-                }} onDragStart={onDragStart} onDrag={onDrag} onDragEnd={onDragEnd} onTouchMove={onDrag}
+                <Vertical draggable={true} ref={bottomHandlerRef} className={'handler y'} onDragStart={onDragStart} onDrag={onDrag} onDragEnd={onDragEnd} onTouchMove={onDrag}
                           onTouchEnd={onDragEnd}/>
             </Vertical>
         </Vertical>
-        <Vertical style={{
-            backgroundColor: 'rgba(255,255,255,0.8)',
-            padding: '0.5rem',
-            cursor: 'pointer',
-            boxShadow: '0 5px 3px -2px rgba(0,0,0,0.05)'
-        }} onClick={() => fileInputRef?.current?.click()}>
-            <Vertical style={{color: "deepskyblue"}} hAlign={'center'}>
-                <MdInsertPhoto style={{fontSize: '3rem'}}/>
-                <Vertical style={{fontSize: '0.8rem'}}>
-                    Choose Image
-                </Vertical>
-            </Vertical>
-        </Vertical>
+        <Horizontal hAlign={'center'}>
+            <TabBarButton onClick={() => fileInputRef?.current?.click()} title={'Select Image'} icon={MdInsertPhoto}/>
+            <TabBarButton onClick={() => fileInputRef?.current?.click()} title={'Undo'} icon={MdOutlineUndo}/>
+            <TabBarButton onClick={() => fileInputRef?.current?.click()} title={'Crop Image & Continue'} icon={MdOutlineCrop}/>
+        </Horizontal>
     </Vertical>);
 }
 
