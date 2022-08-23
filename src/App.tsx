@@ -43,8 +43,12 @@ function App() {
                 width: blockWidth,
                 height: blockHeight
             } = blockRef.current.getBoundingClientRect();
-
+            debugger;
             const imageToActualRatio = imageHeight / layer.naturalHeight
+            const imageToActualRatioTwo = imageWidth / layer.naturalWidth;
+            if(imageToActualRatio !== imageToActualRatioTwo){
+                debugger;
+            }
             const startingXPos = (blockX - imageX) / imageToActualRatio;
             const startingYPos = (blockY - imageY) / imageToActualRatio;
             const dimensionWidth = blockWidth / imageToActualRatio;
