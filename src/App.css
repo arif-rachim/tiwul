@@ -1,19 +1,24 @@
-.overlay{
+.overlay {
     position: absolute;
-    background-color: rgba(0,0,0,0.5);
-}
-.block{
-    position: absolute;
-    border: 2px dashed rgba(0,0,0,0.5);
+    background-color: rgba(0, 0, 0, 0.5);
 }
 
-.handler{
+.block {
+    position: absolute;
+    border: 2px dashed rgba(0, 0, 0, 0.5);
+
+}
+
+.handler {
     position: absolute;
     cursor: move;
+
 }
-.handler.x{
-    width : 3rem
+
+.handler.x {
+    width: 3rem
 }
-.handler.y{
-    height : 3rem
+
+.handler.y {
+    height: 3rem
 }

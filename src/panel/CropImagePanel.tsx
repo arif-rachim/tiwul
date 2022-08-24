@@ -1,8 +1,18 @@
-import React, {DragEvent, MutableRefObject, TouchEvent, useEffect, useRef, useState} from "react";
+import React, {
+    DragEvent,
+    MutableRefObject,
+    TouchEvent,
+    useCallback,
+    useContext,
+    useEffect,
+    useRef,
+    useState
+} from "react";
 import invariant from "tiny-invariant";
 import {Vertical} from "react-hook-components";
 import {Layer} from "./Layer";
-
+import {MdOutlineCrop, MdOutlineUndo} from "react-icons/md";
+import {AppContext, ViewState} from "../App";
 
 
 export function toPx(value: number) {
@@ -10,7 +20,6 @@ export function toPx(value: number) {
 }
 
 export function validateBlockMovement(newBlock: { left: number; top: number; right: number; bottom: number }, originalBlock: { left: number; top: number; right: number; bottom: number }) {
-
     const xMovementNotValid = false;
     const YMovementNotValid = false;
 
@@ -28,6 +37,72 @@ export function validateBlockMovement(newBlock: { left: number; top: number; rig
 export function CropImagePanel(props: { layers: Layer[], blockRef: MutableRefObject<HTMLDivElement | null> }) {
     const {layers} = props;
     const layerContainerRef = useRef<HTMLDivElement>(null);
+    const context = useContext(AppContext);
+    invariant(context, 'AppContext cannot be null');
+    const localBlockRef = useRef<HTMLDivElement>(null);
+    const blockRef = props.blockRef ?? localBlockRef;
+    const onCropImageAndContinue = useCallback(function onCropImageAndContinue() {
+        const newLayers = layers.map(layer => {
+            const image = document.querySelector(`[data-id="${layer.id}"]`);
+            invariant(image, 'image cannot be empty');
+            invariant(blockRef.current, 'image cannot be empty');
+            const {
+                x: imageX,
+                y: imageY,
+                top: imageTop,
+                left: imageLeft,
+                width: imageWidth,
+                height: imageHeight
+            } = image.getBoundingClientRect();
+            const {
+                x: blockX,
+                y: blockY,
+                top: blockTop,
+                left: blockLeft,
+                width: blockWidth,
+                height: blockHeight
+            } = blockRef.current.getBoundingClientRect();
+            const imageToActualRatio = imageHeight / layer.naturalHeight
+            const imageToActualRatioTwo = imageWidth / layer.naturalWidth;
+            if (imageToActualRatio !== imageToActualRatioTwo) {
+                debugger;
+            }
+            const startingXPos = (blockX - imageX) / imageToActualRatio;
+            const startingYPos = (blockY - imageY) / imageToActualRatio;
+            const dimensionWidth = blockWidth / imageToActualRatio;
+            const dimensionHeight = blockHeight / imageToActualRatio;
+
+            return {
+                ...layer,
+                viewPortX: startingXPos,
+                viewPortY: startingYPos,
+                viewPortHeight: dimensionHeight,
+                viewPortWidth: dimensionWidth
+            }
+
+            // first we check the original size of the block using prefferedWidth and prefferedHeight
+            // next we check the actual size of the current image object width and height
+            //find the scale
+            // calculate the current image block, x,y, width, height
+            // scale the x and y against the preffered width and preffered height.
+        });
+        invariant(context, 'Context cannot be empty');
+        context.setLayers(newLayers);
+        context.setViewState(ViewState.ImageSaved);
+    },[blockRef, context, layers]);
+
+    useEffect(() => {
+        context.setTabMenu([
+            {
+                icon: MdOutlineUndo, title: 'Undo', onClick: () => {
+                    context.setLayers([]);
+                    context.setViewState(ViewState.Initial);
+                }
+            },
+            {icon: MdOutlineCrop, title: 'Crop Image & Continue', onClick: () => onCropImageAndContinue()},
+        ])
+    }, [context, onCropImageAndContinue])
+
     const [layerContainerDimension, setLayerContainerDimension] = useState<{ width: number, height: number, left: number, top: number }>({
         width: 0,
         height: 0,
@@ -40,8 +115,7 @@ export function CropImagePanel(props: { layers: Layer[], blockRef: MutableRefObj
         right: 0,
         bottom: 0
     });
-    const localBlockRef = useRef<HTMLDivElement>(null);
-    const blockRef = props.blockRef ?? localBlockRef;
+
     const leftHandlerRef = useRef<HTMLDivElement>(null);
     const leftOverlayRef = useRef<HTMLDivElement>(null);
     const rightHandlerRef = useRef<HTMLDivElement>(null);
@@ -71,6 +145,7 @@ export function CropImagePanel(props: { layers: Layer[], blockRef: MutableRefObj
 
         invariant(blockRef.current, "missing blockRef");
         const {left, right, top, bottom} = blockRef.current.style;
+        console.log('Setting bottom', bottom);
 
         function toNumber(text: string) {
             return parseInt(text.replace('px', ''))
@@ -123,7 +198,6 @@ export function CropImagePanel(props: { layers: Layer[], blockRef: MutableRefObj
 
 
     function renderPosition(blockDimension: { top: number, left: number, right: number, bottom: number }) {
-
         invariant(topHandlerRef.current, 'missing topHandlerRef');
         invariant(bottomHandlerRef.current, 'missing bottomHandlerRef');
         invariant(leftHandlerRef.current, 'missing leftHandlerRef');
@@ -163,6 +237,7 @@ export function CropImagePanel(props: { layers: Layer[], blockRef: MutableRefObj
             topHandlerRef.current.style.top = toPx(blockDimension.top - 20);
             bottomHandlerRef.current.style.bottom = toPx(blockDimension.bottom - 20);
         }
+
     }
 
     useEffect(() => renderPosition(blockDimension), [blockDimension])
@@ -222,6 +297,7 @@ export function CropImagePanel(props: { layers: Layer[], blockRef: MutableRefObj
     }
 
     function onDrag(event: DragEvent<HTMLDivElement> | TouchEvent<HTMLDivElement>) {
+
         const target: HTMLDivElement = event.target as HTMLDivElement;
         invariant(topHandlerRef.current, 'missing topHandlerRef');
         invariant(bottomHandlerRef.current, 'missing bottomHandlerRef');
@@ -260,7 +336,8 @@ export function CropImagePanel(props: { layers: Layer[], blockRef: MutableRefObj
             rightHandlerRef.current.style.top = `${distance.y}px`;
         }
 
-        if (isBottomHandler) {
+        if (isBottomHandler && distance.y > 0) {
+
             const distanceYBottom = layerContainerDimension.height - distance.y;
             target.style.bottom = `${distanceYBottom}px`;
             bottomOverlayRef.current.style.height = `${distanceYBottom}px`;
@@ -279,7 +356,7 @@ export function CropImagePanel(props: { layers: Layer[], blockRef: MutableRefObj
             bottomOverlayRef.current.style.left = `${distance.x}px`;
         }
 
-        if (isRightHandler) {
+        if (isRightHandler && distance.x > 0) {
             const distanceXRight = layerContainerDimension.width - distance.x;
             target.style.right = `${distanceXRight}px`;
             rightOverlayRef.current.style.width = `${distanceXRight}px`;
@@ -290,6 +367,7 @@ export function CropImagePanel(props: { layers: Layer[], blockRef: MutableRefObj
             topOverlayRef.current.style.right = `${distanceXRight}px`;
             bottomOverlayRef.current.style.right = `${distanceXRight}px`;
         }
+
     }
 
     return <Vertical h={'100%'} w={'100%'} ref={layerContainerRef} style={{position: 'relative'}}
@@ -307,7 +385,7 @@ export function CropImagePanel(props: { layers: Layer[], blockRef: MutableRefObj
             }
             let marginX = ((cWidth - imageWidth) / 2);
             let marginY = ((cHeight - imageHeight) / 2);
-            return <img src={file.imageData} key={file.id} data-id={file.id} style={{
+            return <img alt={'Uploaded layer'} src={file.imageData} key={file.id} data-id={file.id} style={{
                 position: 'absolute',
                 top: marginY,
                 left: marginX,

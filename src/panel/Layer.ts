@@ -1,4 +1,3 @@
-
 export interface Layer {
     id: string;
     imageData: string;
