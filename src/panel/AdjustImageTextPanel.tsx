@@ -2,12 +2,15 @@ import {Vertical} from "react-hook-components";
 import {Layer} from "./Layer";
 import React, {MutableRefObject, useCallback, useContext, useEffect, useRef} from "react";
 import invariant from "tiny-invariant";
-import {waitForEvent} from "./waitForEvent";
 import {MdOutlinePublish, MdOutlineUndo, MdTextFields} from "react-icons/md";
-import {AppContext, ViewState} from "../App";
+import {AppContext, TextLayer, ViewState} from "../App";
+import {waitForEvent} from "./utility";
+import ResizeMoveAndRotate from "./ResizeMoveAndRotate";
+import {v4} from "uuid";
+import produce from "immer";
 
-export function AdjustImageTextPanel(props: { layers: Layer[], canvasRef: MutableRefObject<HTMLCanvasElement | null> }) {
-    const {layers} = props;
+export function AdjustImageTextPanel(props: { layers: Layer[], canvasRef: MutableRefObject<HTMLCanvasElement | null>, textLayers: TextLayer[] }) {
+    const {layers, textLayers} = props;
     const _canvasRef = useRef<HTMLCanvasElement>(null);
     const canvasRef = props.canvasRef ?? _canvasRef;
     const context = useContext(AppContext);
@@ -27,14 +30,24 @@ export function AdjustImageTextPanel(props: { layers: Layer[], canvasRef: Mutabl
         });
         const json: any = await response.json();
         const imageData: ImageData = json;
-    },[canvasRef]);
+    }, [canvasRef]);
 
     useEffect(() => {
         context.setTabMenu([
             {icon: MdOutlineUndo, title: 'Undo', onClick: () => context.setViewState(ViewState.ImageSelected)},
             {
-                icon: MdTextFields, title: 'Add Label', onClick: () => {
-                }
+                icon: MdTextFields,
+                title: 'Add Label',
+                onClick: () => context.setTextLayers(old => [...old, {
+                    width: 120,
+                    height: 25,
+                    top: 20,
+                    left: 20,
+                    fontFamily: '',
+                    fontSize: 16,
+                    id: v4(),
+                    rotation: 0
+                }])
             },
             {icon: MdOutlinePublish, title: 'Publish', onClick: () => onPublish()}
         ])
@@ -70,6 +83,43 @@ export function AdjustImageTextPanel(props: { layers: Layer[], canvasRef: Mutabl
         })();
     }, [layers])
     return <Vertical h={'100%'} style={{position: "relative"}}>
-        <canvas ref={canvasRef}/>
+        <Vertical h={'100%'} overflow={'hidden'} style={{position: "relative"}}>
+            <canvas ref={canvasRef}/>
+        </Vertical>
+        <Vertical w={'100%'} h={'100%'} style={{position: 'absolute'}}>
+            {textLayers.map((textLayer:TextLayer) => {
+
+                function onResizeChange(event:{width: number, height: number, top: number, left: number, rotation: number}){
+                    invariant(context,'Context cannot be empty');
+                    context.setTextLayers(produce(textLayers => {
+                        const index = textLayers.findIndex(t => t.id===textLayer.id);
+                        const tl:TextLayer = textLayers[index];
+                        tl.top = event.top;
+                        tl.left = event.left;
+                        tl.width = event.width;
+                        tl.height = event.height;
+                        tl.rotation = event.rotation;
+                    }))
+                }
+                return <ResizeMoveAndRotate key={textLayer.id} style={{
+                    width:textLayer.width,
+                    height:textLayer.height,
+                    transform:`rotate(${textLayer.rotation}deg)`,
+                    top:textLayer.top,
+                    left:textLayer.left,
+                    fontFamily:textLayer.fontFamily,
+                    fontSize:textLayer.fontSize
+                }} onChange={onResizeChange}>
+                    <input type="text"
+                           style={{
+                               border: '1px solid black',
+                               width: '100%',
+                               height: '100%',
+                               minWidth: 60,
+                               minHeight: 20
+                           }}/>
+                </ResizeMoveAndRotate >
+            })}
+        </Vertical>
     </Vertical>
 }

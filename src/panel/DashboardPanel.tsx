@@ -7,6 +7,7 @@ import {Layer} from "./Layer";
 import {v4} from "uuid";
 
 
+
 /**
  <TabBarButton onClick={() => fileInputRef?.current?.click()} title={'Select Image'}
  icon={MdInsertPhoto}/>
@@ -65,13 +66,15 @@ export default function DashboardPanel() {
         context.setViewState(ViewState.ImageSelected);
     }
 
-    return <Vertical>
+    return <Vertical h={'100%'}>
         <input type={"file"} onChange={onFileSelected}
                style={{display: 'none'}}
                ref={fileInputRef}
                accept=".jpg, .png, .jpeg, .gif"
         />
 
-        
+        {/*<ResizeMoveAndRotate >*/}
+        {/*    <Vertical  style={{width:'100%',height:'100%',minWidth:80,minHeight:20,border:'1px solid rgba(0,0,0,0.9)'}}></Vertical>*/}
+        {/*</ResizeMoveAndRotate>*/}
     </Vertical>
 }

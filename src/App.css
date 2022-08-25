@@ -22,3 +22,24 @@
 .handler.y {
     height: 3rem
 }
+
+
+.darken-when-hover{
+    color: rgba(0,0,0,0.1);
+    cursor: pointer;
+}
+.darken-when-hover:hover{
+    color: rgba(0,0,0,0.9);
+}
+
+.anchor{
+    border-radius: 5px;
+    position: absolute;
+    transition: background-color 300ms ease-in-out;
+}
+.anchor:hover{
+    background-color: rgba(0,0,0,0.5);
+}
+.anchor[data-active=true]{
+    background-color: rgba(0,0,0,0.9);
+}

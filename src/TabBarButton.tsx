@@ -9,7 +9,7 @@ export function TabBarButton(props: { onClick: () => void, title: string, icon: 
         cursor: "pointer",
         flexGrow:1
     }} onClick={props.onClick}>
-        <Vertical style={{color: 'rgba(255,255,255,0.9)'}} hAlign={"center"}>
+        <Vertical style={{color: 'rgba(0,0,0,0.9)'}} hAlign={"center"}>
             <Icon style={{fontSize: "3rem"}}/>
             <Vertical style={{fontSize: "0.8rem"}}>
                 {props.title}

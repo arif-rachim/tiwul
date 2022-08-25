@@ -13,11 +13,8 @@ import {Vertical} from "react-hook-components";
 import {Layer} from "./Layer";
 import {MdOutlineCrop, MdOutlineUndo} from "react-icons/md";
 import {AppContext, ViewState} from "../App";
+import {numToPx} from "./utility";
 
-
-export function toPx(value: number) {
-    return `${value}px`;
-}
 
 export function validateBlockMovement(newBlock: { left: number; top: number; right: number; bottom: number }, originalBlock: { left: number; top: number; right: number; bottom: number }) {
     const xMovementNotValid = false;
@@ -64,9 +61,9 @@ export function CropImagePanel(props: { layers: Layer[], blockRef: MutableRefObj
             } = blockRef.current.getBoundingClientRect();
             const imageToActualRatio = imageHeight / layer.naturalHeight
             const imageToActualRatioTwo = imageWidth / layer.naturalWidth;
-            if (imageToActualRatio !== imageToActualRatioTwo) {
-                debugger;
-            }
+            // if (imageToActualRatio !== imageToActualRatioTwo) {
+            //     debugger;
+            // }
             const startingXPos = (blockX - imageX) / imageToActualRatio;
             const startingYPos = (blockY - imageY) / imageToActualRatio;
             const dimensionWidth = blockWidth / imageToActualRatio;
@@ -210,32 +207,32 @@ export function CropImagePanel(props: { layers: Layer[], blockRef: MutableRefObj
         const validX = blockDimension.left >= 0 && blockDimension.right >= 0;
         const validY = blockDimension.top >= 0 && blockDimension.bottom >= 0;
         if (validX) {
-            leftOverlayRef.current.style.width = toPx(blockDimension.left);
-            rightOverlayRef.current.style.width = toPx(blockDimension.right);
-            topOverlayRef.current.style.left = toPx(blockDimension.left);
-            topOverlayRef.current.style.right = toPx(blockDimension.right);
-            bottomOverlayRef.current.style.left = toPx(blockDimension.left);
-            bottomOverlayRef.current.style.right = toPx(blockDimension.right);
-            blockRef.current.style.left = toPx(blockDimension.left);
-            blockRef.current.style.right = toPx(blockDimension.right);
-            leftHandlerRef.current.style.left = toPx(blockDimension.left - 20);
-            rightHandlerRef.current.style.right = toPx(blockDimension.right - 20);
-            topHandlerRef.current.style.right = toPx(blockDimension.right);
-            topHandlerRef.current.style.left = toPx(blockDimension.left);
-            bottomHandlerRef.current.style.right = toPx(blockDimension.right);
-            bottomHandlerRef.current.style.left = toPx(blockDimension.left);
+            leftOverlayRef.current.style.width = numToPx(blockDimension.left);
+            rightOverlayRef.current.style.width = numToPx(blockDimension.right);
+            topOverlayRef.current.style.left = numToPx(blockDimension.left);
+            topOverlayRef.current.style.right = numToPx(blockDimension.right);
+            bottomOverlayRef.current.style.left = numToPx(blockDimension.left);
+            bottomOverlayRef.current.style.right = numToPx(blockDimension.right);
+            blockRef.current.style.left = numToPx(blockDimension.left);
+            blockRef.current.style.right = numToPx(blockDimension.right);
+            leftHandlerRef.current.style.left = numToPx(blockDimension.left - 20);
+            rightHandlerRef.current.style.right = numToPx(blockDimension.right - 20);
+            topHandlerRef.current.style.right = numToPx(blockDimension.right);
+            topHandlerRef.current.style.left = numToPx(blockDimension.left);
+            bottomHandlerRef.current.style.right = numToPx(blockDimension.right);
+            bottomHandlerRef.current.style.left = numToPx(blockDimension.left);
         }
         if (validY) {
-            topOverlayRef.current.style.height = toPx(blockDimension.top);
-            bottomOverlayRef.current.style.height = toPx(blockDimension.bottom);
-            blockRef.current.style.top = toPx(blockDimension.top);
-            blockRef.current.style.bottom = toPx(blockDimension.bottom);
-            leftHandlerRef.current.style.top = toPx(blockDimension.top);
-            leftHandlerRef.current.style.bottom = toPx(blockDimension.bottom);
-            rightHandlerRef.current.style.top = toPx(blockDimension.top);
-            rightHandlerRef.current.style.bottom = toPx(blockDimension.bottom);
-            topHandlerRef.current.style.top = toPx(blockDimension.top - 20);
-            bottomHandlerRef.current.style.bottom = toPx(blockDimension.bottom - 20);
+            topOverlayRef.current.style.height = numToPx(blockDimension.top);
+            bottomOverlayRef.current.style.height = numToPx(blockDimension.bottom);
+            blockRef.current.style.top = numToPx(blockDimension.top);
+            blockRef.current.style.bottom = numToPx(blockDimension.bottom);
+            leftHandlerRef.current.style.top = numToPx(blockDimension.top);
+            leftHandlerRef.current.style.bottom = numToPx(blockDimension.bottom);
+            rightHandlerRef.current.style.top = numToPx(blockDimension.top);
+            rightHandlerRef.current.style.bottom = numToPx(blockDimension.bottom);
+            topHandlerRef.current.style.top = numToPx(blockDimension.top - 20);
+            bottomHandlerRef.current.style.bottom = numToPx(blockDimension.bottom - 20);
         }
 
     }

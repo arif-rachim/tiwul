@@ -56,28 +56,36 @@ export const AppContext = createContext<{
     setTabMenu: Dispatch<SetStateAction<TabMenuItem[]>>,
     setLayers: Dispatch<SetStateAction<Layer[]>>,
     setViewState: Dispatch<SetStateAction<ViewState>>
+    setTextLayers: Dispatch<SetStateAction<TextLayer[]>>
 } | null>(null);
+
+export interface TextLayer{
+    id:string;
+    width:number;
+    height:number;
+    top : number;
+    left :number;
+    rotation:number;
+    fontSize:number;
+    fontFamily:string;
+}
 
 function App() {
     const [viewState, setViewState] = useState<ViewState>(ViewState.Initial);
     const [layers, setLayers] = useState<Layer[]>([]);
+    const [textLayers, setTextLayers] = useState<TextLayer[]>([]);
 
     const blockRef = useRef<HTMLDivElement>(null);
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const [tabMenu, setTabMenu] = useState<TabMenuItem[]>([]);
-    const contextValue = useMemo(() => ({setTabMenu, setLayers, setViewState}),[]);
+    const contextValue = useMemo(() => ({setTabMenu, setLayers, setViewState,setTextLayers}),[]);
     return (<AppContext.Provider value={contextValue}>
         <Vertical h={'100%'} style={{position: 'relative'}} overflow={'hidden'}>
 
-            <Vertical h={'100%'} position={'relative'}>
-                {viewState === ViewState.Initial &&
-                    <DashboardPanel/>
-                }
-                {viewState === ViewState.ImageSelected &&
-                    <CropImagePanel layers={layers} blockRef={blockRef}/>}
-                {viewState === ViewState.ImageSaved &&
-                    <AdjustImageTextPanel layers={layers} canvasRef={canvasRef}/>
-                }
+            <Vertical h={'100%'} position={'relative'} overflow={'hidden'}>
+                {viewState === ViewState.Initial && <DashboardPanel/>}
+                {viewState === ViewState.ImageSelected && <CropImagePanel layers={layers} blockRef={blockRef}/>}
+                {viewState === ViewState.ImageSaved && <AdjustImageTextPanel layers={layers} textLayers={textLayers} canvasRef={canvasRef}/>}
             </Vertical>
             <Horizontal hAlign={'center'} style={{borderTop:'1px solid rgba(255,255,255,0.5)',boxShadow:'0 20px 40px -30px rgba(255,255,255,0.4) inset'}} >
                 {tabMenu.map(menu => {
