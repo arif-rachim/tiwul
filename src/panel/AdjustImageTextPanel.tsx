@@ -14,6 +14,7 @@ export function AdjustImageTextPanel(props: { layers: Layer[], canvasRef: Mutabl
     const _canvasRef = useRef<HTMLCanvasElement>(null);
     const canvasRef = props.canvasRef ?? _canvasRef;
     const context = useContext(AppContext);
+    const canvasContainer = useRef<HTMLDivElement|null>(null);
     invariant(context, 'AppContext cannot be null');
 
     const onPublish = useCallback(async function onPublish() {
@@ -56,19 +57,28 @@ export function AdjustImageTextPanel(props: { layers: Layer[], canvasRef: Mutabl
     useEffect(() => {
         // lets check canvas width
         invariant(canvasRef.current, 'Canvas cannot be empty');
-        const {width: canvasWidth} = canvasRef.current.getBoundingClientRect();
+        let {width: canvasWidth} = canvasRef.current.getBoundingClientRect();
         (async () => {
             const canvas = canvasRef.current;
             invariant(canvas, 'Canvas information');
             const ctx = canvas.getContext("2d");
             invariant(ctx, 'Context inline');
-
+            const {width:containerWidth,height:containerHeight} = canvasContainer.current?.getBoundingClientRect() ?? {width:0,height:0};
             for (const layer of layers) {
                 const canvasScale = canvasWidth / layer.viewPortWidth
                 const viewportScale = canvasWidth / layer.naturalWidth;
-                const canvasHeight = layer.viewPortHeight * canvasScale;
+                let canvasHeight = layer.viewPortHeight * canvasScale;
+                debugger;
+                if(canvasHeight > containerHeight){
+                    canvasWidth = canvasWidth * (containerHeight / canvasHeight );
+                    canvasHeight = containerHeight;
+                }
+
                 canvas.height = canvasHeight;
                 canvas.width = canvasWidth;
+
+                canvas.style.width = canvasWidth+'px';
+                canvas.style.height = canvasHeight+'px';
 
                 const image = new Image();
                 image.src = layer.imageData;
@@ -83,8 +93,8 @@ export function AdjustImageTextPanel(props: { layers: Layer[], canvasRef: Mutabl
         })();
     }, [layers])
     return <Vertical h={'100%'} style={{position: "relative"}}>
-        <Vertical h={'100%'} overflow={'hidden'} style={{position: "relative"}}>
-            <canvas ref={canvasRef}/>
+        <Vertical ref={canvasContainer} h={'100%'} overflow={'hidden'} style={{position: "relative"}}>
+            <canvas ref={canvasRef} />
         </Vertical>
         <Vertical w={'100%'} h={'100%'} style={{position: 'absolute'}}>
             {textLayers.map((textLayer:TextLayer) => {
@@ -110,13 +120,10 @@ export function AdjustImageTextPanel(props: { layers: Layer[], canvasRef: Mutabl
                     fontFamily:textLayer.fontFamily,
                     fontSize:textLayer.fontSize
                 }} onChange={onResizeChange}>
-                    <input type="text"
-                           style={{
-                               border: '1px solid black',
+                    <Vertical style={{
+                               backgroundColor:'rgba(0,0,0,0.3)',
                                width: '100%',
                                height: '100%',
-                               minWidth: 60,
-                               minHeight: 20
                            }}/>
                 </ResizeMoveAndRotate >
             })}

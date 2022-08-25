@@ -32,14 +32,16 @@
     color: rgba(0,0,0,0.9);
 }
 
+
 .anchor{
-    border-radius: 5px;
+    border-radius: 10px;
     position: absolute;
-    transition: background-color 300ms ease-in-out;
+    width:7px;
+    height:7px;
 }
-.anchor:hover{
-    background-color: rgba(0,0,0,0.5);
+
+.anchor.border{
+    background-color: rgba(0,0,0,0.7);
+    border:1px solid rgba(0,0,0,0.3);
 }
-.anchor[data-active=true]{
-    background-color: rgba(0,0,0,0.9);
-}
+

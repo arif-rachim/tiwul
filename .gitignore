@@ -21,8 +21,4 @@
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-/.idea/dictionaries
-/.idea/vcs.xml
-/.idea/modules.xml
-/.idea/inspectionProfiles/Project_Default.xml
-/.idea/tiwul.iml
+/.idea
