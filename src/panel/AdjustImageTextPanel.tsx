@@ -1,9 +1,17 @@
 import {Vertical} from "react-hook-components";
 import {Layer} from "./Layer";
-import React, {MutableRefObject, useCallback, useContext, useEffect, useRef} from "react";
+import React, {MutableRefObject, useCallback, useContext, useEffect, useRef, useState} from "react";
 import invariant from "tiny-invariant";
 import {MdOutlinePublish, MdOutlineUndo, MdTextFields} from "react-icons/md";
-import {AppContext, TextLayer, ViewState} from "../App";
+import {
+    AppContext,
+    HOST_ADDRESS,
+    IMAGE_PATH_URI_SEPARATOR, IMAGE_SERVER_UPLOAD,
+    IMAGE_SERVER_VIEWER,
+    ImageData,
+    TextLayer,
+    ViewState
+} from "../App";
 import {waitForEvent} from "./utility";
 import ResizeMoveAndRotate from "./ResizeMoveAndRotate";
 import {v4} from "uuid";
@@ -16,7 +24,7 @@ export function AdjustImageTextPanel(props: { layers: Layer[], canvasRef: Mutabl
     const context = useContext(AppContext);
     const canvasContainer = useRef<HTMLDivElement|null>(null);
     invariant(context, 'AppContext cannot be null');
-
+    const [focusedText,setFocusedText] = useState<TextLayer>();
     const onPublish = useCallback(async function onPublish() {
         const data = canvasRef?.current?.toDataURL() ?? '';
         const base64 = 'base64,'
@@ -25,13 +33,24 @@ export function AdjustImageTextPanel(props: { layers: Layer[], canvasRef: Mutabl
         formData.append('image', data.substring(startIndex + base64.length, data.length));
         formData.append('key', decodeURIComponent(escape(window.atob('ZTAxNTViNjQzMzExZTUyNTY4YjdjZWQxMGQ5ZGU3NGE='))));
         formData.append('expiration', '600');
-        const response = await fetch(`https://api.imgbb.com/1/upload`, {
+        const response = await fetch(IMAGE_SERVER_UPLOAD, {
             method: 'POST',
             body: formData
         });
         const json: any = await response.json();
-        const imageData: ImageData = json;
-    }, [canvasRef]);
+        const imageData: ImageData = json.data;
+        // lets create redirect url,
+        const params = textLayers.map(textLayer => {
+            const {top,left,width,height,rotation} = textLayer;
+            return `${top}/${left}/${height}/${width}/${rotation}`
+        }).join('/');
+
+        const domainName = IMAGE_SERVER_VIEWER;
+        const url = imageData.display_url.substring(domainName.length,imageData.display_url.length);
+        const serverAddress = HOST_ADDRESS;
+        const newUrl = `${serverAddress}/${params}${IMAGE_PATH_URI_SEPARATOR}${url}`;
+        window.location.assign(newUrl);
+    }, [canvasRef,textLayers]);
 
     useEffect(() => {
         context.setTabMenu([
@@ -68,7 +87,7 @@ export function AdjustImageTextPanel(props: { layers: Layer[], canvasRef: Mutabl
                 const canvasScale = canvasWidth / layer.viewPortWidth
                 const viewportScale = canvasWidth / layer.naturalWidth;
                 let canvasHeight = layer.viewPortHeight * canvasScale;
-                debugger;
+
                 if(canvasHeight > containerHeight){
                     canvasWidth = canvasWidth * (containerHeight / canvasHeight );
                     canvasHeight = containerHeight;
@@ -96,7 +115,7 @@ export function AdjustImageTextPanel(props: { layers: Layer[], canvasRef: Mutabl
         <Vertical ref={canvasContainer} h={'100%'} overflow={'hidden'} style={{position: "relative"}}>
             <canvas ref={canvasRef} />
         </Vertical>
-        <Vertical w={'100%'} h={'100%'} style={{position: 'absolute'}}>
+        <Vertical w={'100%'} h={'100%'} style={{position: 'absolute'}} onMouseDown={() => setFocusedText(undefined)} onTouchStart={() => setFocusedText(undefined)}>
             {textLayers.map((textLayer:TextLayer) => {
 
                 function onResizeChange(event:{width: number, height: number, top: number, left: number, rotation: number}){
@@ -118,8 +137,11 @@ export function AdjustImageTextPanel(props: { layers: Layer[], canvasRef: Mutabl
                     top:textLayer.top,
                     left:textLayer.left,
                     fontFamily:textLayer.fontFamily,
-                    fontSize:textLayer.fontSize
-                }} onChange={onResizeChange}>
+                    fontSize:textLayer.fontSize,
+                }} onChange={onResizeChange} isEditMode={focusedText?.id === textLayer.id} onFocus={(event) => {
+                    event.stopPropagation();
+                    setFocusedText(textLayer);
+                }}>
                     <Vertical style={{
                                backgroundColor:'rgba(0,0,0,0.3)',
                                width: '100%',
