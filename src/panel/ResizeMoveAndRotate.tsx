@@ -1,7 +1,6 @@
 import {Vertical} from "react-hook-components";
 import {
     CSSProperties,
-    PointerEvent as ReactPointerEvent,
     PropsWithChildren,
     TouchEvent as ReactTouchEvent,
     MouseEvent as ReactMouseEvent,
@@ -10,10 +9,10 @@ import {
 } from "react";
 import invariant from "tiny-invariant";
 import {degToNum, numToPx, pxToNum} from "./utility";
+import {MdRotateRight} from "react-icons/md";
+import {IoMdResize} from "react-icons/io";
 
-const checkDistance = (event: ReactTouchEvent | TouchEvent) => {
-    return Math.hypot(event.touches[0].pageX - event.touches[1].pageX, event.touches[0].pageY - event.touches[1].pageY);
-}
+
 interface TouchPosition{
     pageX:number;
     pageY:number;
@@ -25,7 +24,7 @@ export default function ResizeMoveAndRotate(props: PropsWithChildren<{
     onFocus : (event:ReactMouseEvent|ReactTouchEvent) => void,
     isEditMode:boolean
 }>) {
-    const isDraggingRef = useRef<boolean>(false);
+    const isDraggingRef = useRef<HTMLDivElement|null>(null);
     const elementRef = useRef<HTMLDivElement>(null);
     const topLeftAnchor = useRef<HTMLDivElement>(null);
     const bottomLeftAnchor = useRef<HTMLDivElement>(null);
@@ -39,41 +38,27 @@ export default function ResizeMoveAndRotate(props: PropsWithChildren<{
     const rightAnchor = useRef<HTMLDivElement>(null);
     const bottomAnchor = useRef<HTMLDivElement>(null);
     const touchPrevMoveRef = useRef<TouchPosition|undefined>();
+    const {onChange,children} = props;
     useEffect(() => {
         const element = elementRef.current;
-        invariant(element, 'Element cannot be empty');
-
-        const {width, height} = element.getBoundingClientRect() ?? {width: 0, height: 0};
-        if (!element.style.width) {
-            element.style.width = width + 'px';
-        }
-        if (!element.style.height) {
-            element.style.height = height + 'px';
-        }
-
-    }, [props.children])
-
-    function onMouseDownAnchor(event: ReactTouchEvent|ReactMouseEvent) {
-
-        const isTopLeft = event.target === topLeftAnchor.current;
-        const isTopRight = event.target === topRightAnchor.current;
-        const isBottomLeft = event.target === bottomLeftAnchor.current;
-        const isBottomRight = event.target === bottomRightAnchor.current;
-        const isMainAnchor = event.target === mainAnchor.current;
-        const isLeft = event.target === leftAnchor.current;
-        const isRight = event.target === rightAnchor.current;
-        const isTop = event.target === topAnchor.current;
-        const isBottom = event.target === bottomAnchor.current;
-        const isRotation = event.target === rotationAnchor.current;
-        const element = elementRef.current;
-        invariant(element, 'Element cannot be empty');
-
-        isDraggingRef.current = isTopLeft || isTopRight || isBottomLeft || isBottomRight || isLeft || isRight || isTop || isBottom || isMainAnchor || isRotation;
-
+        invariant(element, 'Element target cannot be empty');
+        const parentElement = element.parentElement;
         function onMouseMove(event: MouseEvent|TouchEvent) {
-            if (!isDraggingRef.current) {
+            if (isDraggingRef.current === null) {
                 return;
             }
+            const target = isDraggingRef.current;
+            const isTopLeft = target === topLeftAnchor.current;
+            const isTopRight = target === topRightAnchor.current;
+            const isBottomLeft = target === bottomLeftAnchor.current;
+            const isBottomRight = target === bottomRightAnchor.current;
+            const isMainAnchor = target === mainAnchor.current;
+            const isLeft = target === leftAnchor.current;
+            const isRight = target === rightAnchor.current;
+            const isTop = target === topAnchor.current;
+            const isBottom = target === bottomAnchor.current;
+            const isRotation = target === rotationAnchor.current;
+
             let movementX = 0;
             let movementY = 0;
             if('touches' in event){
@@ -90,7 +75,7 @@ export default function ResizeMoveAndRotate(props: PropsWithChildren<{
                 movementY = event.movementY;
             }
 
-            invariant(element, 'Element target cannot be emtpy');
+            invariant(element, 'Element target cannot be empty');
             if (isTopLeft) {
                 element.style.top = numToPx(pxToNum(element.style.top) + movementY);
                 element.style.height = numToPx(pxToNum(element.style.height) - movementY);
@@ -135,78 +120,60 @@ export default function ResizeMoveAndRotate(props: PropsWithChildren<{
                 element.style.width = numToPx(pxToNum(element.style.width) + movementX);
             }
         }
-
         function onMouseUp() {
-
-            isDraggingRef.current = false;
+            if(isDraggingRef.current === null){
+                return;
+            }
+            isDraggingRef.current = null;
             touchPrevMoveRef.current = undefined;
 
             const {top,left,height,width,transform} = elementRef.current?.style ?? {top:'0px',left:'0px',height:'0px',width:'0px',transform:''};
-
-            props.onChange({
+            onChange({
                 top : pxToNum(top),
                 left: pxToNum(left),
                 height: pxToNum(height),
                 width: pxToNum(width),
                 rotation: degToNum(transform)
             });
-            window.removeEventListener('mouseup', onMouseUp, );
-            window.removeEventListener('mousemove', onMouseMove);
-            window.removeEventListener('touchend', onMouseUp, );
-            window.removeEventListener('touchmove', onMouseMove);
+        }
+        invariant(parentElement,'Parent Element cannot be empty');
+        parentElement.addEventListener('mousemove',onMouseMove);
+        parentElement.addEventListener('mouseup',onMouseUp);
+        parentElement.addEventListener('touchmove',onMouseMove);
+        parentElement.addEventListener('touchend',onMouseUp);
+        return () => {
+            parentElement.removeEventListener('mousemove',onMouseMove);
+            parentElement.removeEventListener('mouseup',onMouseUp);
+            parentElement.removeEventListener('touchmove',onMouseMove);
+            parentElement.removeEventListener('touchend',onMouseUp);
         }
 
-        window.addEventListener('mouseup', onMouseUp, );
-        window.addEventListener('mousemove', onMouseMove);
-        window.addEventListener('touchend', onMouseUp, );
-        window.addEventListener('touchmove', onMouseMove);
+    },[onChange]);
+    useEffect(() => {
+        const element = elementRef.current;
+        invariant(element, 'Element cannot be empty');
+
+        const {width, height} = element.getBoundingClientRect() ?? {width: 0, height: 0};
+        if (!element.style.width) {
+            element.style.width = width + 'px';
+        }
+        if (!element.style.height) {
+            element.style.height = height + 'px';
+        }
+    }, [children])
+
+    function onMouseDownAnchor(event: ReactTouchEvent|ReactMouseEvent) {
+        isDraggingRef.current = event.currentTarget as HTMLDivElement;
     }
 
-    const startRef = useRef({x: 0, y: 0, distance: 0});
-
-    function onTouchStart(event: ReactTouchEvent) {
-        if (event.touches.length !== 2) {
-            return;
+    function onMouseDownAndFocus(event: ReactTouchEvent|ReactMouseEvent){
+        if(!props.isEditMode){
+            isDraggingRef.current = mainAnchor.current;
         }
-        startRef.current.x = event.touches[0].pageX + event.touches[1].pageX;
-        startRef.current.y = event.touches[0].pageY + event.touches[1].pageY;
-        startRef.current.distance = checkDistance(event);
-
-        function onTouchMove(event: TouchEvent) {
-            if (event.touches.length === 2) {
-                event.preventDefault();
-            }
-            let scale: number;
-            if ('scale' in event) {
-                scale = (event as any).scale;
-            } else {
-                const deltaDistance = checkDistance(event);
-                scale = deltaDistance / startRef.current.distance;
-            }
-            const imageElementScale = Math.min(Math.max(1, scale), 4);
-
-            const deltaX = (((event.touches[0].pageX + event.touches[1].pageX) / 2) - startRef.current.x) * 2;
-            const deltaY = (((event.touches[0].pageY + event.touches[1].pageY) / 2) - startRef.current.y) * 2;
-            const element = elementRef.current;
-            invariant(element, 'Element cannot be empty');
-            const transform = `translate3d(${deltaX}px,${deltaY}px,0) scale(${imageElementScale})`;
-
-            element.style.transform = transform;
-            element.style.zIndex = "9999";
-        }
-
-        function onTouchEnd(event: TouchEvent) {
-
-
-            window.removeEventListener('touchmove', onTouchMove);
-            window.removeEventListener('touchend', onTouchEnd);
-        }
-
-        window.addEventListener('touchmove', onTouchMove);
-        window.addEventListener('touchend', onTouchEnd);
+        props.onFocus(event);
     }
 
-    return <Vertical ref={elementRef} style={{position: 'absolute', ...props.style}} onMouseDown={props.onFocus} onTouchStart={props.onFocus} >
+    return <Vertical ref={elementRef} style={{position: 'absolute', ...props.style}} onMouseDown={onMouseDownAndFocus} onTouchStart={onMouseDownAndFocus} >
         {props.children}
         <Vertical w={'100%'} h={'100%'} style={{position: 'absolute',display:props.isEditMode?'flex':'none'}} >
             <Vertical ref={mainAnchor}
@@ -219,31 +186,47 @@ export default function ResizeMoveAndRotate(props: PropsWithChildren<{
                       }}
                       onMouseDown={onMouseDownAnchor} onTouchStart={onMouseDownAnchor}/>
             <Vertical ref={topLeftAnchor} className={'anchor border'} style={{top: -anchorSize, left: -anchorSize}}
-                      onMouseDown={onMouseDownAnchor} onTouchStart={onMouseDownAnchor}/>
+                      onMouseDown={onMouseDownAnchor} onTouchStart={onMouseDownAnchor}>
+                <IoMdResize style={{fontSize:16,margin:2,transform:'rotate(90deg)'}}/>
+            </Vertical>
             <Vertical ref={topRightAnchor} className={'anchor border'} style={{top: -anchorSize, right: -anchorSize}}
-                      onMouseDown={onMouseDownAnchor} onTouchStart={onMouseDownAnchor}/>
+                      onMouseDown={onMouseDownAnchor} onTouchStart={onMouseDownAnchor}>
+                <IoMdResize style={{fontSize:16,margin:2}}/>
+            </Vertical>
             <Vertical ref={bottomLeftAnchor} className={'anchor border'}
                       style={{bottom: -anchorSize, left: -anchorSize}}
-                      onMouseDown={onMouseDownAnchor} onTouchStart={onMouseDownAnchor}/>
+                      onMouseDown={onMouseDownAnchor} onTouchStart={onMouseDownAnchor}>
+                <IoMdResize style={{fontSize:16,margin:2}}/>
+            </Vertical>
             <Vertical ref={bottomRightAnchor} className={'anchor border'}
                       style={{bottom: -anchorSize, right: -anchorSize}}
-                      onMouseDown={onMouseDownAnchor} onTouchStart={onMouseDownAnchor}/>
+                      onMouseDown={onMouseDownAnchor} onTouchStart={onMouseDownAnchor}>
+                <IoMdResize style={{fontSize:16,margin:2,transform:'rotate(90deg)'}}/>
+            </Vertical>
             <Vertical ref={topAnchor} className={'anchor border'} style={{
                 top: -anchorSize,
                 marginLeft: `calc(50% - ${anchorSize/2}px)`,
-            }} onMouseDown={onMouseDownAnchor} onTouchStart={onMouseDownAnchor}/>
+            }} onMouseDown={onMouseDownAnchor} onTouchStart={onMouseDownAnchor}>
+                <IoMdResize style={{fontSize:16,margin:2,transform:'rotate(-45deg)'}}/>
+            </Vertical>
             <Vertical ref={bottomAnchor} className={'anchor border'} style={{
                 bottom: -anchorSize,
                 marginLeft: `calc(50% - ${anchorSize/2}px)`,
-            }} onMouseDown={onMouseDownAnchor} onTouchStart={onMouseDownAnchor}/>
+            }} onMouseDown={onMouseDownAnchor} onTouchStart={onMouseDownAnchor}>
+                <IoMdResize style={{fontSize:16,margin:2,transform:'rotate(-45deg)'}}/>
+            </Vertical>
             <Vertical ref={leftAnchor} className={'anchor border'} style={{
                 left: -anchorSize,
                 top: `calc(50% - ${anchorSize/2}px)`,
-            }} onMouseDown={onMouseDownAnchor} onTouchStart={onMouseDownAnchor}/>
+            }} onMouseDown={onMouseDownAnchor} onTouchStart={onMouseDownAnchor}>
+                <IoMdResize style={{fontSize:16,margin:2,transform:'rotate(45deg)'}}/>
+            </Vertical>
             <Vertical ref={rightAnchor} className={'anchor border'} style={{
                 right: -anchorSize,
                 top: `calc(50% - ${anchorSize/2}px)`,
-            }} onMouseDown={onMouseDownAnchor} onTouchStart={onMouseDownAnchor}/>
+            }} onMouseDown={onMouseDownAnchor} onTouchStart={onMouseDownAnchor}>
+                <IoMdResize style={{fontSize:16,margin:2,transform:'rotate(45deg)'}}/>
+            </Vertical>
 
 
             <Vertical ref={rotationAnchor} className={'anchor border'}
@@ -253,7 +236,9 @@ export default function ResizeMoveAndRotate(props: PropsWithChildren<{
                       }}
                       onMouseDown={onMouseDownAnchor}
                       onTouchStart={onMouseDownAnchor}
-            />
+            >
+                <MdRotateRight style={{fontSize:20}}/>
+            </Vertical>
 
         </Vertical>
 

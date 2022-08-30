@@ -8,13 +8,13 @@ import {AdjustImageTextPanel} from "./panel/AdjustImageTextPanel";
 import {IconType} from "react-icons";
 import DashboardPanel from "./panel/DashboardPanel";
 import {v4} from "uuid";
-import {waitForEvent} from "./panel/utility";
 import ViewImagePanel from "./panel/ViewImagePanel";
 
 export const IMAGE_SERVER_VIEWER = 'https://i.ibb.co/';
 export const IMAGE_SERVER_UPLOAD = `https://api.imgbb.com/1/upload`;
 export const HOST_ADDRESS = 'http://localhost:3000';
 export const IMAGE_PATH_URI_SEPARATOR = '/image/';
+export const MOCK_IMAGE = true;
 export enum ViewState {
     Initial,
     ImageSelected,
@@ -97,7 +97,6 @@ function App() {
         const [textLayers,imageUrl] = pathName.split('/image/');
         const layers = textLayers.substring(1,textLayers.length).split('/').reduce((result:TextLayer[],value:string,index:number,array:string[]) => {
             if(index % 5 === 0 && array.length >= index + 5){
-                debugger;
                 const [top,left,height,width,rotation] = array.slice(index,index+5);
                 result.push({
                     top:parseInt(top),

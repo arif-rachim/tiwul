@@ -38,10 +38,12 @@
     position: absolute;
     width:20px;
     height:20px;
+    color: rgba(0,0,0,0.7);
+
 }
 
 .anchor.border{
-    background-color: rgba(0,0,0,0.05);
+
 }
 .anchor:after{
     width: 4px;
@@ -51,7 +53,7 @@
     border-radius: 5px;
     position: absolute;
     content: "";
-    background-color: white;
-    border: 1px solid black;
+    background-color: rgba(255,255,255,0.8);
+    border: 1px solid rgba(0,0,0,0.2);
 }
 

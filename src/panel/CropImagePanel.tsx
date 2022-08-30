@@ -46,24 +46,16 @@ export function CropImagePanel(props: { layers: Layer[], blockRef: MutableRefObj
             const {
                 x: imageX,
                 y: imageY,
-                top: imageTop,
-                left: imageLeft,
-                width: imageWidth,
                 height: imageHeight
             } = image.getBoundingClientRect();
             const {
                 x: blockX,
                 y: blockY,
-                top: blockTop,
-                left: blockLeft,
                 width: blockWidth,
                 height: blockHeight
             } = blockRef.current.getBoundingClientRect();
             const imageToActualRatio = imageHeight / layer.naturalHeight
-            const imageToActualRatioTwo = imageWidth / layer.naturalWidth;
-            // if (imageToActualRatio !== imageToActualRatioTwo) {
-            //     debugger;
-            // }
+
             const startingXPos = (blockX - imageX) / imageToActualRatio;
             const startingYPos = (blockY - imageY) / imageToActualRatio;
             const dimensionWidth = blockWidth / imageToActualRatio;
@@ -190,11 +182,9 @@ export function CropImagePanel(props: { layers: Layer[], blockRef: MutableRefObj
             img.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAUEBAAAACwAAAAAAQABAAACAkQBADs=';
             event.dataTransfer.setDragImage(img, 0, 0);
         }
-
     }
 
-
-    function renderPosition(blockDimension: { top: number, left: number, right: number, bottom: number }) {
+    const renderPosition = useCallback(function renderPosition(blockDimension: { top: number, left: number, right: number, bottom: number }) {
         invariant(topHandlerRef.current, 'missing topHandlerRef');
         invariant(bottomHandlerRef.current, 'missing bottomHandlerRef');
         invariant(leftHandlerRef.current, 'missing leftHandlerRef');
@@ -235,9 +225,9 @@ export function CropImagePanel(props: { layers: Layer[], blockRef: MutableRefObj
             bottomHandlerRef.current.style.bottom = numToPx(blockDimension.bottom - 20);
         }
 
-    }
+    },[blockRef]);
 
-    useEffect(() => renderPosition(blockDimension), [blockDimension])
+    useEffect(() => renderPosition(blockDimension), [blockDimension, renderPosition])
 
     function onDragBlockRef(event: DragEvent | TouchEvent) {
 

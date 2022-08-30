@@ -5,10 +5,9 @@ import invariant from "tiny-invariant";
 import {MdOutlinePublish, MdOutlineUndo, MdTextFields} from "react-icons/md";
 import {
     AppContext,
-    HOST_ADDRESS,
     IMAGE_PATH_URI_SEPARATOR, IMAGE_SERVER_UPLOAD,
     IMAGE_SERVER_VIEWER,
-    ImageData,
+    ImageData, MOCK_IMAGE,
     TextLayer,
     ViewState
 } from "../App";
@@ -17,11 +16,40 @@ import ResizeMoveAndRotate from "./ResizeMoveAndRotate";
 import {v4} from "uuid";
 import produce from "immer";
 
+const MOCK_IMAGE_DATA:ImageData = {
+    image : {
+        url:'',
+        extension:'',
+        filename:'',
+        mime:'',
+        name:''
+    },
+    height : '',
+    delete_url : '',
+    display_url:'http://localhost:3000/image/sample.png',
+    url:'',
+    id:'',
+    width:'',
+    title:'',
+    expiration:'',
+    thumb:{
+        url:'',
+        extension:'',
+        filename:'',
+        mime:'',
+        name:''
+    },
+    time:'',
+    url_viewer:'',
+    size:0
+};
+
 export function AdjustImageTextPanel(props: { layers: Layer[], canvasRef: MutableRefObject<HTMLCanvasElement | null>, textLayers: TextLayer[] }) {
     const {layers, textLayers} = props;
     const _canvasRef = useRef<HTMLCanvasElement>(null);
     const canvasRef = props.canvasRef ?? _canvasRef;
     const context = useContext(AppContext);
+    const textLayerRef = useRef<HTMLDivElement|null>(null);
     const canvasContainer = useRef<HTMLDivElement|null>(null);
     invariant(context, 'AppContext cannot be null');
     const [focusedText,setFocusedText] = useState<TextLayer>();
@@ -33,12 +61,18 @@ export function AdjustImageTextPanel(props: { layers: Layer[], canvasRef: Mutabl
         formData.append('image', data.substring(startIndex + base64.length, data.length));
         formData.append('key', decodeURIComponent(escape(window.atob('ZTAxNTViNjQzMzExZTUyNTY4YjdjZWQxMGQ5ZGU3NGE='))));
         formData.append('expiration', '600');
-        const response = await fetch(IMAGE_SERVER_UPLOAD, {
-            method: 'POST',
-            body: formData
-        });
-        const json: any = await response.json();
-        const imageData: ImageData = json.data;
+        let imageData: ImageData|undefined = undefined;
+        if(MOCK_IMAGE){
+            imageData = MOCK_IMAGE_DATA
+        }else{
+            const response = await fetch(IMAGE_SERVER_UPLOAD, {
+                method: 'POST',
+                body: formData
+            });
+            const json: any = await response.json();
+            imageData = json.data;
+        }
+        invariant(imageData,'Image data cannot be empty');
         // lets create redirect url,
         const params = textLayers.map(textLayer => {
             const {top,left,width,height,rotation} = textLayer;
@@ -47,8 +81,7 @@ export function AdjustImageTextPanel(props: { layers: Layer[], canvasRef: Mutabl
 
         const domainName = IMAGE_SERVER_VIEWER;
         const url = imageData.display_url.substring(domainName.length,imageData.display_url.length);
-        const serverAddress = HOST_ADDRESS;
-        const newUrl = `${serverAddress}/${params}${IMAGE_PATH_URI_SEPARATOR}${url}`;
+        const newUrl = `/${params}${IMAGE_PATH_URI_SEPARATOR}${url}`;
         window.location.assign(newUrl);
     }, [canvasRef,textLayers]);
 
@@ -85,7 +118,7 @@ export function AdjustImageTextPanel(props: { layers: Layer[], canvasRef: Mutabl
             const {width:containerWidth,height:containerHeight} = canvasContainer.current?.getBoundingClientRect() ?? {width:0,height:0};
             for (const layer of layers) {
                 const canvasScale = canvasWidth / layer.viewPortWidth
-                const viewportScale = canvasWidth / layer.naturalWidth;
+                //const viewportScale = canvasWidth / layer.naturalWidth;
                 let canvasHeight = layer.viewPortHeight * canvasScale;
 
                 if(canvasHeight > containerHeight){
@@ -93,11 +126,20 @@ export function AdjustImageTextPanel(props: { layers: Layer[], canvasRef: Mutabl
                     canvasHeight = containerHeight;
                 }
 
+                const marginLeft = Math.round((containerWidth - canvasWidth) / 2)+'px';
+
                 canvas.height = canvasHeight;
                 canvas.width = canvasWidth;
 
                 canvas.style.width = canvasWidth+'px';
                 canvas.style.height = canvasHeight+'px';
+                canvas.style.marginLeft = marginLeft;
+                const textLayer = textLayerRef.current;
+                invariant(textLayer);
+                textLayer.style.width = canvasWidth+'px';
+                textLayer.style.height = canvasHeight+'px';
+                textLayer.style.marginLeft = marginLeft;
+
 
                 const image = new Image();
                 image.src = layer.imageData;
@@ -110,12 +152,12 @@ export function AdjustImageTextPanel(props: { layers: Layer[], canvasRef: Mutabl
             }
 
         })();
-    }, [layers])
+    }, [canvasRef, layers]);
     return <Vertical h={'100%'} style={{position: "relative"}}>
         <Vertical ref={canvasContainer} h={'100%'} overflow={'hidden'} style={{position: "relative"}}>
             <canvas ref={canvasRef} />
         </Vertical>
-        <Vertical w={'100%'} h={'100%'} style={{position: 'absolute'}} onMouseDown={() => setFocusedText(undefined)} onTouchStart={() => setFocusedText(undefined)}>
+        <Vertical ref={textLayerRef} style={{position: 'absolute'}} onMouseDown={() => setFocusedText(undefined)} onTouchStart={() => setFocusedText(undefined)}>
             {textLayers.map((textLayer:TextLayer) => {
 
                 function onResizeChange(event:{width: number, height: number, top: number, left: number, rotation: number}){
@@ -144,6 +186,7 @@ export function AdjustImageTextPanel(props: { layers: Layer[], canvasRef: Mutabl
                 }}>
                     <Vertical style={{
                                backgroundColor:'rgba(0,0,0,0.3)',
+                                border : '1px solid rgba(255,255,255,0.5)',
                                width: '100%',
                                height: '100%',
                            }}/>
