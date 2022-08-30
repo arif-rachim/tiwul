@@ -6,12 +6,11 @@ import {MdOutlinePublish, MdOutlineUndo, MdTextFields} from "react-icons/md";
 import {
     AppContext,
     IMAGE_PATH_URI_SEPARATOR, IMAGE_SERVER_UPLOAD,
-    IMAGE_SERVER_VIEWER,
     ImageData, MOCK_IMAGE,
     TextLayer,
     ViewState
 } from "../App";
-import {waitForEvent} from "./utility";
+import {pxToNum, waitForEvent} from "./utility";
 import ResizeMoveAndRotate from "./ResizeMoveAndRotate";
 import {v4} from "uuid";
 import produce from "immer";
@@ -79,9 +78,10 @@ export function AdjustImageTextPanel(props: { layers: Layer[], canvasRef: Mutabl
             return `${top}/${left}/${height}/${width}/${rotation}`
         }).join('/');
 
-        const domainName = IMAGE_SERVER_VIEWER;
-        const url = imageData.display_url.substring(domainName.length,imageData.display_url.length);
-        const newUrl = `/${params}${IMAGE_PATH_URI_SEPARATOR}${url}`;
+        const urls = imageData.display_url.split('//')[1].split('/');
+        const url = urls.slice(1,urls.length).join('/');
+        const {width,height} = canvasRef.current?.style ?? {width:'0px',height:'0px'};
+        const newUrl = `/${params}${IMAGE_PATH_URI_SEPARATOR}${pxToNum(width)}/${pxToNum(height)}/${url}`;
         window.location.assign(newUrl);
     }, [canvasRef,textLayers]);
 

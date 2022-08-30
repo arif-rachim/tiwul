@@ -12,9 +12,9 @@ import ViewImagePanel from "./panel/ViewImagePanel";
 
 export const IMAGE_SERVER_VIEWER = 'https://i.ibb.co/';
 export const IMAGE_SERVER_UPLOAD = `https://api.imgbb.com/1/upload`;
-export const HOST_ADDRESS = 'http://localhost:3000';
-export const IMAGE_PATH_URI_SEPARATOR = '/image/';
-export const MOCK_IMAGE = true;
+export const IMAGE_PATH_URI_SEPARATOR = '/4O4/';
+export const MOCK_IMAGE = false;
+
 export enum ViewState {
     Initial,
     ImageSelected,
@@ -83,6 +83,7 @@ function App() {
     const [layers, setLayers] = useState<Layer[]>([]);
     const [textLayers, setTextLayers] = useState<TextLayer[]>([]);
     const [imageLayers,setImageLayers] = useState<string[]>([]);
+    const [canvasDimension,setCanvasDimension] = useState<{width:number,height:number}>({width:0,height:0});
     const blockRef = useRef<HTMLDivElement>(null);
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const [tabMenu, setTabMenu] = useState<TabMenuItem[]>([]);
@@ -94,7 +95,7 @@ function App() {
             return;
         }
 
-        const [textLayers,imageUrl] = pathName.split('/image/');
+        const [textLayers,imageUrl] = pathName.split(IMAGE_PATH_URI_SEPARATOR);
         const layers = textLayers.substring(1,textLayers.length).split('/').reduce((result:TextLayer[],value:string,index:number,array:string[]) => {
             if(index % 5 === 0 && array.length >= index + 5){
                 const [top,left,height,width,rotation] = array.slice(index,index+5);
@@ -110,20 +111,22 @@ function App() {
                 })
             }
             return result;
-        },[])
+        },[]);
+        const [width,height,...url] = imageUrl.split('/');
         setTextLayers(layers);
-        setImageLayers([`${IMAGE_SERVER_VIEWER}${imageUrl}`]);
+        setImageLayers([`${IMAGE_SERVER_VIEWER}${url.join('/')}`]);
+        setCanvasDimension({width:parseInt(width),height:parseInt(height)})
         setViewState(ViewState.ViewImage);
     },[]);
     return (<AppContext.Provider value={contextValue}>
-        <Vertical h={'100%'} style={{position: 'relative'}} overflow={'hidden'}>
+        <Vertical h={'100%'} style={{position: 'relative'}} overflow={'hidden'} className={'bg'}>
             <Vertical h={'100%'} position={'relative'} overflow={'hidden'}>
                 {viewState === ViewState.Initial && <DashboardPanel/>}
                 {viewState === ViewState.ImageSelected && <CropImagePanel layers={layers} blockRef={blockRef}/>}
                 {viewState === ViewState.ImageSaved && <AdjustImageTextPanel layers={layers} textLayers={textLayers} canvasRef={canvasRef}/>}
-                {viewState === ViewState.ViewImage && <ViewImagePanel textLayers={textLayers} imageLayers={imageLayers} />}
+                {viewState === ViewState.ViewImage && <ViewImagePanel textLayers={textLayers} imageLayers={imageLayers} canvasDimension={canvasDimension} />}
             </Vertical>
-            <Horizontal hAlign={'center'} style={{borderTop:'1px solid rgba(255,255,255,0.5)',boxShadow:'0 20px 40px -30px rgba(255,255,255,0.4) inset'}} >
+            <Horizontal hAlign={'center'} style={{boxShadow:'0 20px 40px -30px rgba(0,0,0,0.2) inset',background:'rgba(0,0,0,0.05)'}} >
                 {tabMenu.map(menu => {
                     return <TabBarButton key={menu.title} onClick={menu.onClick} title={menu.title} icon={menu.icon}/>
                 })}
